@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include "mem.h"
 
 int has_initialized = 0;
@@ -30,7 +31,7 @@ int mem_init(int size_of_region){
 		return -1;
 	}
 	int page_size = getpagesize();
-        size_of_region = sizeof(mcb) + page_size;
+    size_of_region = ((sizeof(mcb) + page_size-1)／page_size+1)*page_size;//取需要的最小整页面大小
 	//for the request of memory in units of the page size later
 	int fd = open("/dev/zero", O_RDWR);
 	//open the /dev/zero device
@@ -48,7 +49,7 @@ int mem_init(int size_of_region){
 	return 0;
 }
 
-void *mem_malloc(int size, int style){
+void *mem_alloc(int size, int style){
 	void *current_location;
 	struct mem_control_block *current_location_mcb;
 	void *memory_location;
@@ -57,7 +58,7 @@ void *mem_malloc(int size, int style){
 	//set memory_location to NULL until we find a suitable location
 	current_location = managed_memory_start;
 	//begin searching at the start of managed memory
-	size = (size + sizeof(struct mem_control_block)) << 3;
+	size = ((size + sizeof(struct mem_control_block)-1)/8) << 3+8;//计算最小所需8-byte size
 	//calculate the actual size of the memory block
 	//return 8-byte aligned chunks of memory
 	if(style == M_BESTFIT){
@@ -109,7 +110,7 @@ void *mem_malloc(int size, int style){
 		return NULL;
 	}
 	if(!memory_location)
-	{//we still don't find the correct location
+	{   //we still don't find the correct location
 		//then we need to ask the OS for new memory block
 		struct mem_control_block *new_mcb = (struct mem_control_block *)memory_location;
 		new_mcb -> is_available = 1;
@@ -153,5 +154,15 @@ int mem_free(void *ptr){
 	mcb -> is_available = 1;
 	//mark the block as being available
 	mem_dump();
+	return 0;
+}
+int main()
+{
+	char *p;
+	mem_init(4096);
+	p =(char*) mem_alloc(20*sizeof(char),0);
+	strcpy(p,"test mem_alloc");
+	puts(p);
+	mem_free(p);
 	return 0;
 }
