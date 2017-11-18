@@ -103,7 +103,7 @@ void *mem_alloc(int size, int style)
             current_location = current_location +  current_location_mcb -> size;
         }
     }
-    else
+    else if	(style == M_FIRSTFIT)
     {
         //first-fit only examines free chunks until it finds one that fits
         while(current_location != last_valid_address)
@@ -118,28 +118,25 @@ void *mem_alloc(int size, int style)
             current_location = current_location +  current_location_mcb -> size;
         }
     }
+	else
+	{
+		m_error = E_NO_SPACE;
+        return NULL;
+	}
     if(memory_location == NULL)
     {
         //there is not enough contiguous free space within size_of_region
         m_error = E_NO_SPACE;
         return NULL;
     }
-    if(!memory_location)
-    {
-        //we still don't find the correct location
-        //then we need to ask the OS for new memory block
-        struct mem_control_block *new_mcb = (struct mem_control_block *)memory_location;
-        new_mcb -> is_available = 1;
-        int page_size = getpagesize();
-        new_mcb -> size = sizeof(new_mcb) + page_size;
-        memory_location = last_valid_address;
-        //the new memory will be  where the last valid address left off
-        last_valid_address = last_valid_address + size;
-        //move the last valid address forward size
-        current_location_mcb = memory_location;
-        current_location_mcb -> is_available = 0;
-        current_location_mcb -> size = size;
-    }
+
+   	struct mem_control_block *next_mcb=current_location+size;
+	if(next_mcb!=current_location+current_location_mcb->size)
+	{
+		next_mcb->is_available=1;
+		next_mcb->size=current_location_mcb->size-size;
+	}
+	current_location_mcb->size=size;
     memory_location = memory_location + sizeof(struct mem_control_block);
     //move the pointer past the mem_control_block
     return memory_location;
@@ -158,6 +155,7 @@ void mem_dump()
         if(current_location_mcb -> is_available)
         {
             printf("%p-%p\n\n", current_location, current_location + current_location_mcb -> size);
+			//printf("in dump\n");
         }
         current_location = current_location +  current_location_mcb -> size;
     }
@@ -165,44 +163,56 @@ void mem_dump()
 
 int mem_free(void *ptr)
 {
+    void* location=ptr-8;
     struct mem_control_block *mcb = ptr-8;
     if(ptr == NULL)
     {
         return -1;
     }
-    //clear avaiable;
-   // mcb->is_avaiable=0;
+	mcb -> is_available = 1;
     //merger if the block after this block is avaliable
-    struct mem_control_block *next_mcb = ptr + mcb->size;
+    struct mem_control_block *next_mcb = location+mcb->size;
     if(next_mcb->is_available)
-        mcb->size+=next_mcb->size+8;
-    //mcb = ptr - sizeof(mcb);
-    //get the first address of the memory control block
-    mcb -> is_available = 1;
-    //mark the block as being available
+        mcb->size+=next_mcb->size;
+
+
+
     void *previous = managed_memory_start;
     struct mem_control_block *premcb;
     while(previous<ptr)
     {
         premcb = (struct mem_control_block*)previous;
-        if(previous+premcb->size<last_valid_address&&previous+8+premcb->size==ptr)
+        if(premcb->is_available==1&&previous+premcb->size==ptr-8)
         {
-            premcb->is_available=1;
             premcb->size=premcb->size+mcb->size;
             break;
         }
-        previous+=(premcb->size+8);
+        previous+=(premcb->size);
     }
     mem_dump();
     return 0;
 }
 int main()
 {
-    char *p;
+    char *p1,*p2,*p3,*p4;
     mem_init(4096);
-    p =(char*) mem_alloc(20*sizeof(char),0);
-    strcpy(p,"test mem_alloc");
-    puts(p);
-    mem_free(p);
+    mem_dump();
+    p1 =(char*) mem_alloc(20*sizeof(char),0);
+    strcpy(p1,"test mem_alloc");
+    puts(p1);
+	mem_dump();
+
+	p2 =(char*) mem_alloc(20*sizeof(char),0);
+	mem_dump();
+	p3 =(char*) mem_alloc(20*sizeof(char),0);
+	mem_dump();
+    mem_free(p2);
+    p4 =(char*) mem_alloc(16*sizeof(char),0);
+    mem_dump();
+    mem_free(p1);
+    mem_free(p4);
+    mem_free(p3);
+
+
     return 0;
 }
