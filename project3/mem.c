@@ -26,16 +26,16 @@ int mem_init(int size_of_region)
     //initialize memory allocator
     //called one time by a process using our routines
     struct mem_control_block *mcb;
-    if(has_initialized == 1 || size_of_region <= 0) //cases where mem_init should return a failure:
+    if(has_initialized == 1 || size_of_region <= 0)
     {
+	//cases where mem_init should return a failure:
         //mem_init is called more than once;
         //size_of_region is less than or equal to 0
         m_error = E_BAD_ARGS;
         return -1;
     }
     int page_size = getpagesize();
-    size_of_region = ((sizeof(mcb) + size_of_region-1)/page_size+1)*page_size;//取需要的最小整页面大小
-    //for the request of memory in units of the page size later
+    size_of_region = ((sizeof(mcb) + size_of_region - 1) / page_size + 1) * page_size;//取需要的最小整页面大小
     int fd = open("/dev/zero", O_RDWR);
     //open the /dev/zero device
     if((managed_memory_start = mmap(NULL, size_of_region, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED)
@@ -63,9 +63,7 @@ void *mem_alloc(int size, int style)
     //set memory_location to NULL until we find a suitable location
     current_location = managed_memory_start;
     //begin searching at the start of managed memory
-    size =(((size + sizeof(struct mem_control_block)-1)/8) << 3)+8;//计算最小所需8-byte size
-    //calculate the actual size of the memory block
-    //return 8-byte aligned chunks of memory
+    size = ((( size + sizeof(struct mem_control_block) - 1) / 8) << 3) + 8;//计算最小所需8-byte size
     if(style == M_BESTFIT)
     {
         //for the best-fit policy
@@ -79,13 +77,10 @@ void *mem_alloc(int size, int style)
             //we use current_location to calculate addresses
             if(current_location_mcb -> is_available && current_location_mcb -> size >= size && (memory_location == NULL || current_location_mcb -> size < ((struct mem_control_block *)memory_location) -> size))
             {
-                //we have found the correct location
-                current_location_mcb -> is_available = 0;
                 memory_location = current_location;
-                break;
             }
-            current_location = current_location +  current_location_mcb -> size;
-            //the current memory block is not suitable, move to the next one
+            current_location = current_location + current_location_mcb -> size;
+            //move to and check the next one
         }
     }
     else if (style == M_WORSTFIT)
@@ -96,14 +91,12 @@ void *mem_alloc(int size, int style)
             current_location_mcb = (struct mem_control_block*)current_location;
             if(current_location_mcb -> is_available && current_location_mcb -> size >= size && (memory_location == NULL || current_location_mcb -> size > ((struct mem_control_block *)memory_location) -> size))
             {
-                current_location_mcb -> is_available = 0;
                 memory_location = current_location;
-                break;
             }
             current_location = current_location +  current_location_mcb -> size;
         }
     }
-    else if	(style == M_FIRSTFIT)
+    else if(style == M_FIRSTFIT)
     {
         //first-fit only examines free chunks until it finds one that fits
         while(current_location != last_valid_address)
@@ -111,32 +104,28 @@ void *mem_alloc(int size, int style)
             current_location_mcb = (struct mem_control_block*)current_location;
             if(current_location_mcb -> is_available && current_location_mcb -> size >= size)
             {
-                current_location_mcb -> is_available = 0;
                 memory_location = current_location;
                 break;
+		//once find, then break
             }
             current_location = current_location +  current_location_mcb -> size;
         }
     }
-	else
-	{
-		m_error = E_NO_SPACE;
-        return NULL;
-	}
     if(memory_location == NULL)
     {
         //there is not enough contiguous free space within size_of_region
         m_error = E_NO_SPACE;
         return NULL;
     }
-
-   	struct mem_control_block *next_mcb=current_location+size;
-	if(next_mcb!=current_location+current_location_mcb->size)
-	{
-		next_mcb->is_available=1;
-		next_mcb->size=current_location_mcb->size-size;
-	}
-	current_location_mcb->size=size;
+    struct mem_control_block *correct_mcb = (struct mem_control_block *)memory_location;
+    if(correct_mcb -> size > size)
+    {
+	    struct mem_control_block *next_mcb = (struct mem_control_block *)(memory_location + size);
+	    next_mcb -> is_available = 1;
+	    next_mcb -> size = correct_mcb -> size -size;
+    }
+    correct_mcb -> is_available = 0;
+    correct_mcb -> size = size;
     memory_location = memory_location + sizeof(struct mem_control_block);
     //move the pointer past the mem_control_block
     return memory_location;
@@ -154,7 +143,7 @@ void mem_dump()
         current_location_mcb = (struct mem_control_block *)current_location;
         if(current_location_mcb -> is_available)
         {
-            printf("%p-%p\n\n", current_location, current_location + current_location_mcb -> size);
+            printf("%p-%p\n", current_location, current_location + current_location_mcb -> size);
 			//printf("in dump\n");
         }
         current_location = current_location +  current_location_mcb -> size;
@@ -174,9 +163,6 @@ int mem_free(void *ptr)
     struct mem_control_block *next_mcb = location+mcb->size;
     if(next_mcb->is_available)
         mcb->size+=next_mcb->size;
-
-
-
     void *previous = managed_memory_start;
     struct mem_control_block *premcb;
     while(previous<ptr)
@@ -194,25 +180,25 @@ int mem_free(void *ptr)
 }
 int main()
 {
-    char *p1,*p2,*p3,*p4;
+    char *p1,*p2,*p3,*p4,*p5;
     mem_init(4096);
     mem_dump();
-    p1 =(char*) mem_alloc(20*sizeof(char),0);
+    p1 =(char*) mem_alloc(10*sizeof(char),1);
     strcpy(p1,"test mem_alloc");
     puts(p1);
-	mem_dump();
-
-	p2 =(char*) mem_alloc(20*sizeof(char),0);
-	mem_dump();
-	p3 =(char*) mem_alloc(20*sizeof(char),0);
-	mem_dump();
-    mem_free(p2);
-    p4 =(char*) mem_alloc(16*sizeof(char),0);
+    mem_dump();
+    p2 =(char*) mem_alloc(20*sizeof(char),1);
+    mem_dump();
+    p3 =(char*) mem_alloc(30*sizeof(char),1);
+    mem_dump();
+    p4 =(char*) mem_alloc(36*sizeof(char),1);
     mem_dump();
     mem_free(p1);
-    mem_free(p4);
     mem_free(p3);
-
-
+    p5 = (char*) mem_alloc(5*sizeof(char),1);
+    mem_dump();
+    mem_free(p4);
+    mem_free(p2);
+    mem_free(p5);
     return 0;
 }
