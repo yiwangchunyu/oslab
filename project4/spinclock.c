@@ -5,7 +5,7 @@ typedef struct spinlock
 	int flag;
 }spinlock_t;
 
-void spinlock_init(spinclock_t *lock)
+void spinlock_init(spinclock_t *lock, int init_value)
 {
 	lock -> flag = 0;//0 for free, 1 for held
 }

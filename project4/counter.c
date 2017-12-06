@@ -1,7 +1,3 @@
-#include <pthread.h>
-#include "mutex.c"
-#include "spinlock.c"
-#include "lock.h"
 #include "structure.h"
 #ifdef LOCK_TPYE == SPINLOCK
 	typedef struct __counter_t {
@@ -29,24 +25,24 @@
 	
 #endif
 
-void init(counter_t *c) {
-	c->value = 0;
-	init(&c->lock, 0);
+void counter_init(counter_t *c,int value) {
+	c->value = value;
+	lock_init(&c->lock, 0);
 }
 
-void increment(counter_t *c) {
+void counter_increment(counter_t *c) {
 	lock(&c->lock);
 	c->value++;
 	unlock(&c->lock);
 }
 
-void decrement(counter_t *c) {
+void counter_decrement(counter_t *c) {
 	lock(&c->lock);
 	c->value--;
 	unlock(&c->lock);
 }
  
-int get(counter_t *c) {
+int counter_get_value(counter_t *c) {
 	lock(&c->lock);
 	int rc = c->value;
 	unlock(&c->lock);
