@@ -6,7 +6,7 @@ typedef struct mutex
 	int flag;
 }mutex_t;
 
-void mutex_init(mutex_t *lock)
+void mutex_init(mutex_t *lock,int init_value)
 {
 	lock -> flag = 0;//0 for free, 1 for held
 }

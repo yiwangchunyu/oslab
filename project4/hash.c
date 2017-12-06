@@ -1,5 +1,5 @@
 #include "list.c"
-
+#include "structure.h"
 typedef struct _hash_t
 {
 	list_t *list_head;
