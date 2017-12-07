@@ -1,5 +1,5 @@
 #include "structure.h"
-#ifdef LOCK_TPYE == SPINLOCK
+#if LOCK_TPYE == SPINLOCK
 	typedef struct __counter_t {
 		int value;
 		spinlock_t lock;

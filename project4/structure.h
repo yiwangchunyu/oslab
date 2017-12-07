@@ -2,7 +2,7 @@
 #include "mutex.c"
 #include "spinlock.c"
 #include "lock.h"
-#ifdef LOCK_TPYE == SPINLOCK
+#if LOCK_TPYE == SPINLOCK
 	void lock_init(spinlock_t *lock, int init_value)
 	{
 		spinlock_init(lock, init_value);
