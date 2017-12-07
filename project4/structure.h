@@ -1,6 +1,5 @@
 #include <pthread.h>
 #include "mutex.c"
-#include "spinlock.c"
 #include "lock.h"
 #if LOCK_TPYE == SPINLOCK
 	void lock_init(spinlock_t *lock, int init_value)
@@ -59,17 +58,3 @@
 	}
 #endif
 
-void counter_init(counter_t *c, int value);
-int counter_get_value(counter_t *c);
-void counter_increment(counter_t *c);
-void counter_decrement(counter_t *c);
-
-void list_init(list_t *list);
-void list_insert(list_t *list, unsigned int key);
-void list_delete(list_t *list, unsigned int key);
-void *list_lookup(list_t *list, unsigned int key);
-
-void hash_init(hash_t *hash, int size);
-void hash_insert(hash_t *hash, unsigned int key);
-void hash_delete(hash_t *hash, unsigned int key);
-void *hash_lookup(hash_t *hash, unsigned int key);

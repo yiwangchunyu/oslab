@@ -1,5 +1,5 @@
 #include "sys_futex.c"
-#include "xchg.c"
+#include "spinlock.c"
 
 typedef struct mutex
 {

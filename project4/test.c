@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <time.h>
-#include <sys/time.h>
+
+#include "test.h"
 #define THREAD_COUNT 8  //线程数
 struct timeval start;
 struct timeval end;
@@ -13,12 +13,12 @@ double gettimeinterval(struct timeval start, struct timeval end)
 
 int main()
 {
-	couter_t counter;
+	counter_t counter;
 	counter_init(&counter, 0);
 	long thread;
 	int i;
 	pthread_t* thread_handles;
-	thread_count = THREAD_COUNT;
+	int thread_count = THREAD_COUNT;
 	thread_handles = malloc(thread_count*sizeof(pthread_t)); 
 	for(thread=0;thread<thread_count;thread++)
 			pthread_create(&thread_handles[thread],NULL, function, (void*)thread);

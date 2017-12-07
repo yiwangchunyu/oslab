@@ -1,24 +1,25 @@
 #include "structure.h"
+
 #if LOCK_TPYE == SPINLOCK
-	typedef struct __counter_t {
+	typedef struct counter_t {
 		int value;
 		spinlock_t lock;
 	} counter_t;
 	
 #elif LOCK_TPYE == MUTEX
-	typedef struct __counter_t {
+	typedef struct counter_t {
 		int value;
 		mutex_t lock;
 	} counter_t;
 	
 #elif LOCK_TPYE == PTHREAD_SPINLOCK
-	typedef struct __counter_t {
+	typedef struct counter_t {
 		int value;
 		pthread_spinlock_t lock;
 	} counter_t;
 	
 #elif LOCK_TPYE == PTHREAD_MUTEX
-	typedef struct __counter_t {
+	typedef struct counter_t {
 		int value;
 		pthread_mutex_t lock;
 	} counter_t;
