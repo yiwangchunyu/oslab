@@ -13,7 +13,7 @@ double gettimeinterval(struct timeval start, struct timeval end)
 
 int main()
 {
-	counter_t counter;
+	
 	counter_init(&counter, 0);
 	long thread;
 	//int i;
@@ -22,6 +22,8 @@ int main()
 	thread_handles = malloc(thread_count*sizeof(pthread_t)); 
 	for(thread=0;thread<thread_count;thread++)
 			pthread_create(&thread_handles[thread],NULL, function, (void*)thread);
+	for(thread=0; thread<thread_count; thread++)
+		pthread_join(thread_handles[thread],NULL);
 
 	printf("%d \n", counter_get_value(&counter));
 	return 0;
