@@ -23,12 +23,13 @@ int main()
 	for(thread=0;thread<thread_count;thread++)
 			pthread_create(&thread_handles[thread],NULL, function, (void*)thread);
 
-	printf("%d \n", counter.value);
+	printf("%d \n", counter_get_value(&counter));
 	return 0;
 }
 
 void *function (void *rank)
 {
-	long my_rank = (long)rank;
-	counter_increcement(&counter);
+	//long my_rank = (long)rank;
+	counter_increment(&counter);
+	return NULL;
 }
