@@ -1,9 +1,9 @@
 #include <stdio.h>
-
 #include "test.h"
 #define THREAD_COUNT 8  //线程数
 struct timeval start;
 struct timeval end;
+counter_t counter;
 //gettimeofday($start, NULL);
 
 double gettimeinterval(struct timeval start, struct timeval end)
@@ -16,7 +16,7 @@ int main()
 	counter_t counter;
 	counter_init(&counter, 0);
 	long thread;
-	int i;
+	//int i;
 	pthread_t* thread_handles;
 	int thread_count = THREAD_COUNT;
 	thread_handles = malloc(thread_count*sizeof(pthread_t)); 

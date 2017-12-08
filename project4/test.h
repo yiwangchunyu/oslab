@@ -1,7 +1,4 @@
-#include "structure.h"
 #include "counter.c"
-#include "list.c"
-#include "hash.c"
 #include <time.h>
 #include <sys/time.h>
 
