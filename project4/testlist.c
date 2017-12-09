@@ -22,7 +22,7 @@ int main()
 	//int i;
 	pthread_t* thread_handles;
 	int thread_count;
-	for(thread_count=1;thread_count<=5;thread_count++)
+	for(thread_count=1;thread_count<=15;thread_count++)
 	{
 	gettimeofday(&start, NULL);
 	thread_handles = malloc(thread_count*sizeof(pthread_t)); 
@@ -43,8 +43,8 @@ void *function (void *rank)
 	int i ;	
         //list_t t1;
 //	list_init(aList);
-	for(i = 0 ;i<3;i++)
+	for(i = 0 ;i<MAX;i++)
 	list_insert(&aList,i);
-	printlist(&aList);
+//	printlist(&aList);
 	return NULL;
 }
