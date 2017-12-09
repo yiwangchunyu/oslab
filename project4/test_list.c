@@ -21,8 +21,8 @@ int main()
 	long thread;
 	//int i;
 	pthread_t* thread_handles;
-	int thread_count;
-	for(thread_count=1;thread_count<=15;thread_count++)
+	int thread_count=1;
+	for(thread_count=1;thread_count<=20;thread_count++)
 	{
 	gettimeofday(&start, NULL);
 	thread_handles = malloc(thread_count*sizeof(pthread_t)); 
@@ -39,12 +39,27 @@ int main()
 
 void *function (void *rank)
 {
-	//long my_rank = (long)rank;
-	int i ;	
-        //list_t t1;
-//	list_init(aList);
+	/*test1 insert 1000000 items
+	int i;
 	for(i = 0 ;i<MAX;i++)
-	list_insert(&aList,i);
-//	printlist(&aList);
+	list_insert(&aList,i);*/
+	//test2 insert 100000 and then delete them
+        int i;
+/*	for(i = 0 ;i<MAX;i++)
+	   list_insert(&aList,i);*/
+//        printf("%X\n",aList.head);
+//	printf(" rank : %ld\n",(long)rank);
+	for(i = 0;i<MAX;i++)
+	  list_delete(&aList,i);
+	/*test 3 insert and delete randomly
+	int sign,i;
+	srand(time(0));
+	for(i = 0 ;i<MAX;i++)
+	{
+	  int tmp = rand()%20170;
+	  int sign = rand()%2;
+	  if(sign)list_insert(&aList,tmp);
+	  else list_insert(&aList,tmp);
+	}*/
 	return NULL;
 }

@@ -50,8 +50,12 @@ void list_insert(list_t *list, unsigned int key)
 void list_delete(list_t *list, unsigned int key)
 
 {
-	node_t* curr = (node_t*)malloc(sizeof(node_t));
 	lock(&list->lock);
+	node_t* curr = (node_t*)malloc(sizeof(node_t));
+	if(list->head == NULL)
+	{
+	unlock(&list->lock);
+	return ;}
 	curr=list->head;
 	if(curr->key==key)
 	{
