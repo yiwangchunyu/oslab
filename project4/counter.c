@@ -3,30 +3,33 @@
 #if LOCK_TPYE == SPINLOCK
 	typedef struct counter_t {
 		int value;
+		spinlock_t value_lock;
 		int group_counter[GROUP];
 		spinlock_t lock[GROUP];
-		spinlock_t value_lock;
 	} counter_t;
 	
 #elif LOCK_TPYE == MUTEX
 	typedef struct counter_t {
 		int value;
+		spinlock_t value_lock;
 		int group_counter[GROUP];
-		mutex_t lock;
+		spinlock_t lock[GROUP];
 	} counter_t;
 	
 #elif LOCK_TPYE == PTHREAD_SPINLOCK
 	typedef struct counter_t {
 		int value;
+		spinlock_t value_lock;
 		int group_counter[GROUP];
-		pthread_spinlock_t lock;
+		spinlock_t lock[GROUP];
 	} counter_t;
 	
 #elif LOCK_TPYE == PTHREAD_MUTEX
 	typedef struct counter_t {
 		int value;
+		spinlock_t value_lock;
 		int group_counter[GROUP];
-		pthread_mutex_t lock;
+		spinlock_t lock[GROUP];
 	} counter_t;
 	
 #endif
