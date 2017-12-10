@@ -119,3 +119,14 @@ void printlist(list_t* list)
     unlock(&list->lock);
     putchar('\n');
 }
+void list_free(list_t *list)
+{
+  if(list->head==NULL)return ;
+  node_t *curr = list->head;
+  while(curr)
+  {
+  	node_t* t = curr;
+	free(t);
+	curr = curr->next;
+  }
+ } 

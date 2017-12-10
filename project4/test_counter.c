@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "test_counter.h"
 
-#define MAX 100000 //each thread would call counter_increment(&counter) in a loop max times
+#define MAX 1000000 //each thread would call counter_increment(&counter) in a loop max times
 struct timeval start;
 struct timeval end;
 counter_t counter;
@@ -19,8 +19,8 @@ int main()
 	long thread;
 	int i;
 	pthread_t* thread_handles;
-	int thread_count;
-	for(i=0;i<10;i++)
+	int thread_count = 0;
+	for(i=0;i<5;i++)
 	{	
 		printf("------------------------test%d----------------------\n", i );
 		for(thread_count=1;thread_count<=20;thread_count++)

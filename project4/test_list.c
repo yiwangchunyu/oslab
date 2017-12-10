@@ -17,16 +17,17 @@ long int get_time_interval(struct timeval start, struct timeval end)
 int main()
 {
 	
-	list_init(&aList);
+
 	long thread;
 	int i;
 	pthread_t* thread_handles;
 	int thread_count = 1;
-	for(i=0;i<10;i++)
+	for(i=0;i<5;i++)
 	{	
 		printf("------------------------test%d----------------------\n", i );
 		for(thread_count=1;thread_count<=20;thread_count++)
 		{	
+			list_init(&aList);
 			gettimeofday(&start, NULL);
 			thread_handles = malloc(thread_count*sizeof(pthread_t)); 
 			for(thread=0;thread<thread_count;thread++)
@@ -36,8 +37,9 @@ int main()
 			gettimeofday(&end, NULL);
 			//printf("lock_type: %d, thread_count: %d, time: %ld us \n",LOCK_TYPE, thread_count, get_time_interval(start,end));
 			printf("%ld\n", get_time_interval(start,end));
+			list_free(&aList);
 		}
-		
+	         	
 	}	
 	return 0;
 }
@@ -49,14 +51,12 @@ void *function (void *rank)
 	for(i = 0 ;i<MAX;i++)
 	list_insert(&aList,i);*/
 	//test2 insert 100000 and then delete them
-        int i;	
+        /*int i;	
 	for(i = 0 ;i<MAX;i++)
 	  { list_insert(&aList,i);}
-//        printf("%X\n",aList.head);
-//	printf(" rank : %ld\n",(long)rank);
 	for(i = 0;i<MAX;i++)
-	{ list_delete(&aList,i);}
-	/*test 3 insert and delete randomly
+	{ list_delete(&aList,i);}*/
+	//test 3 insert and delete randomly
 	int sign,i;
 	srand(time(0));
 	for(i = 0 ;i<MAX;i++)
@@ -65,6 +65,6 @@ void *function (void *rank)
 	  int sign = rand()%2;
 	  if(sign)list_insert(&aList,tmp);
 	  else list_insert(&aList,tmp);
-	}*/
+	}
 	return NULL;
 }

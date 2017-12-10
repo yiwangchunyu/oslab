@@ -12,7 +12,7 @@ int hash_code(int key, int size)
 
 void hash_init(hash_t *hash, int size)
 {
-	hash -> list_head = (list_t *)malloc(sizeof(list_t));
+	hash -> list_head = (list_t *)malloc(sizeof(list_t)*size);
 	hash -> size = size;
 	int i = 0;
 	while(i != size)
@@ -38,4 +38,9 @@ void *hash_lookup(hash_t *hash, unsigned int key)
 	int bucket = hash_code(key, hash -> size);
 	return list_lookup(hash -> list_head + bucket, key);
 }
-
+void hash_free(hash_t* hash)
+{
+	int i ;
+	for(i = 0 ; i<hash->size;i++)
+	    list_free(hash->list_head+i);
+}
