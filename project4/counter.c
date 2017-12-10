@@ -1,5 +1,5 @@
 #include "structure.h"
-#define GROUP 4
+#define GROUP 50
 #if LOCK_TPYE == SPINLOCK
 	typedef struct counter_t {
 		int value;
