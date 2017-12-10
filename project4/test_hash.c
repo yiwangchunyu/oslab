@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "test_hash.h"
-#define MAX 100000
-#define THREAD_COUNT 8  //线程数
+#define MAX 1000000
 struct timeval start;
 struct timeval end;
 hash_t  aHash;

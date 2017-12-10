@@ -65,15 +65,25 @@ void list_delete(list_t *list, unsigned int key)
 		unlock(&list->lock);
 		return ;
 	}//如果head就是要删除的元素
-	while(curr->next)
+	node_t* pre = list->head;
+	curr = curr->next;
+	while(curr)
 	{
-		if((curr->next)->key==key)
+		if(curr->key==key)
 		{
-			curr->next=(curr->next)->next;
-			free(curr->next);
-			curr->next = NULL;
+			if(curr->next==NULL)
+			{
+				pre->next=NULL;
+			}
+			else
+			{
+				pre->next=curr->next;	
+			}
+			free(curr);
+			curr = NULL;
 			break;
 		}
+		pre=curr;
 		curr=curr->next;
 	}//如果要删除的元素不是在head
 	unlock(&list->lock);
