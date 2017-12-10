@@ -33,7 +33,7 @@ int main()
 				pthread_join(thread_handles[thread],NULL);
 			gettimeofday(&end, NULL);
 			//printf("lock_type: %d, thread_count: %d, time: %ld us \n",LOCK_TYPE, thread_count, get_time_interval(start,end));
-			printf("%ld, %d\n", get_time_interval(start,end), counter_get_value(&counter));
+			printf("%ld\n", get_time_interval(start,end));
 		}
 		
 	}	
