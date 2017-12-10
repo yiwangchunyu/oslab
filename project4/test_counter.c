@@ -19,7 +19,7 @@ int main()
 	int i;
 	pthread_t* thread_handles;
 	int thread_count;
-	for(i=0;i<10;i++)
+	for(i=0;i<5;i++)
 	{	
 		printf("------------------------test%d----------------------\n", i );
 		for(thread_count=1;thread_count<=20;thread_count++)
