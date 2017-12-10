@@ -15,7 +15,6 @@ long int get_time_interval(struct timeval start, struct timeval end)
 int main()
 {
 	
-	counter_init(&counter, 0);
 	long thread;
 	int i;
 	pthread_t* thread_handles;
@@ -25,6 +24,7 @@ int main()
 		printf("------------------------test%d----------------------\n", i );
 		for(thread_count=1;thread_count<=20;thread_count++)
 		{	
+			counter_init(&counter, 0);
 			gettimeofday(&start, NULL);
 			thread_handles = malloc(thread_count*sizeof(pthread_t)); 
 			for(thread=0;thread<thread_count;thread++)
@@ -33,7 +33,7 @@ int main()
 				pthread_join(thread_handles[thread],NULL);
 			gettimeofday(&end, NULL);
 			//printf("lock_type: %d, thread_count: %d, time: %ld us \n",LOCK_TYPE, thread_count, get_time_interval(start,end));
-			printf("%ld\n", get_time_interval(start,end));
+			printf("%ld, %d\n", get_time_interval(start,end), counter_get_value(&counter));
 		}
 		
 	}	
@@ -42,11 +42,11 @@ int main()
 
 void *function (void *rank)
 {
-	//long my_rank = (long)rank;
+	long my_rank = (long)rank;
 	int i;
 	for(i=0;i<MAX;i++)
 	{
-		counter_increment(&counter);
+		counter_increment(&counter, my_rank);
 	}
 	return NULL;
 }
