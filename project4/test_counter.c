@@ -15,16 +15,16 @@ long int get_time_interval(struct timeval start, struct timeval end)
 int main()
 {
 	
-	counter_init(&counter, 0);
 	long thread;
 	int i;
 	pthread_t* thread_handles;
-	int thread_count = 0;
+	int thread_count;
 	for(i=0;i<5;i++)
 	{	
 		printf("------------------------test%d----------------------\n", i );
 		for(thread_count=1;thread_count<=20;thread_count++)
 		{	
+			counter_init(&counter, 0);
 			gettimeofday(&start, NULL);
 			thread_handles = malloc(thread_count*sizeof(pthread_t)); 
 			for(thread=0;thread<thread_count;thread++)
@@ -42,11 +42,11 @@ int main()
 
 void *function (void *rank)
 {
-	//long my_rank = (long)rank;
+	long my_rank = (long)rank;
 	int i;
 	for(i=0;i<MAX;i++)
 	{
-		counter_increment(&counter);
+		counter_increment(&counter, my_rank);
 	}
 	return NULL;
 }

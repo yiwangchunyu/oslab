@@ -24,3 +24,5 @@ gcc -g -Wall -o test_counter test_counter.c -lpthread
 ./test_counter>output_counter_lock3
 echo you can check the result in file output_lock3
 cat output_counter_lock3
+
+sed '1c #define LOCK_TYPE 0' lock.h
