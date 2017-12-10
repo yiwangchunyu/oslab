@@ -51,7 +51,7 @@ void list_delete(list_t *list, unsigned int key)
 
 {
 	lock(&list->lock);
-	node_t* curr = (node_t*)malloc(sizeof(node_t));
+	node_t* curr;
 	if(list->head == NULL)
 	{
 	unlock(&list->lock);
@@ -61,6 +61,8 @@ void list_delete(list_t *list, unsigned int key)
 	{
 		list->head = curr->next;
 		free(curr);
+		curr = NULL;
+		unlock(&list->lock);
 		return ;
 	}//如果head就是要删除的元素
 	while(curr->next)
@@ -68,7 +70,8 @@ void list_delete(list_t *list, unsigned int key)
 		if((curr->next)->key==key)
 		{
 			curr->next=(curr->next)->next;
-			free(curr);
+			free(curr->next);
+			curr->next = NULL;
 			break;
 		}
 		curr=curr->next;
