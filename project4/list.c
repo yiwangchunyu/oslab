@@ -126,7 +126,7 @@ void list_free(list_t *list)
   while(curr)
   {
   	node_t* t = curr;
-	free(t);
 	curr = curr->next;
+	free(t);
   }
  } 
