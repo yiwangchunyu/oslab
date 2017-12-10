@@ -46,16 +46,17 @@ int main()
 
 void *function (void *rank)
 {
-	//test1 insert 1000000 items
+	/*test1 insert 1000000 items
 	int i;
 	for(i = 0 ;i<MAX;i++)
-	list_insert(&aList,i);
+	list_insert(&aList,i);*/
 	//test2 insert 100000 and then delete them
-        /*int i;	
+        int i;	
 	for(i = 0 ;i<MAX;i++)
 	  { list_insert(&aList,i);}
 	for(i = 0;i<MAX;i++)
-	{ list_delete(&aList,i);}*/
+	{ list_delete(&aList,i);}
+
 	/*test 3 insert and delete randomly
 	int sign,i;
 	srand(time(0));
