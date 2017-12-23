@@ -57,7 +57,11 @@ int main()
 		for(j=9;j<19;j++,index+=1)
 			printf("%12d", *(index));
 			putchar(10);
-		for(j=19;j<25;j++,index+=1)
+		for(j=19;j<23;j++,index+=1)
+			printf("%12d", *(index));
+		putchar(10);
+			
+		for(j=23;j<25;j++,index+=1)
 			printf("%12d", *(index));
 	printf("\n------------------------------------------------------------------------------------------------------------------------------------------\n");
 	}
@@ -89,7 +93,7 @@ int main()
 		{
 			for(j=0;j<N_IBLOCKS;j++)
 			{
-				if(inode[i]->dblocks[j]==0) 
+				if(inode[i]->iblocks[j]==0) 
 				{
 					end = 1;
 					break;
@@ -120,6 +124,11 @@ int main()
 		//for each i2blocks
 		if(end==0)
 		{
+			if(inode[i]->i2block==0)
+			{
+				end=1;
+				break;
+			}
 			int i2block_p[512/4]={0};
 			fseek(fin, 1024+512*inode[i]->i2block, 0);
 			bytes = fread(i2block_p, 512, 1, fin);
@@ -161,6 +170,11 @@ int main()
 		//for each i3blocks
 		if(end==0)
 		{
+			if(inode[i]->i3block==0)
+			{
+				end=1;
+				break;
+			}
 			int i3block_p[512/4]={0};
 			fseek(fin, 1024+512*inode[i]->i3block, 0);
 			bytes = fread(i3block_p, 512, 1, fin);
