@@ -51,8 +51,14 @@ int main()
 		bytes = fread(buffer, 25*4, 1, fin);
 		memcpy(inode[i], buffer, 100);
 		index = (int *)buffer;
-		for(j=0;j<25;j++,index+=1)
-			printf("%12d ", *(index));
+		for(j=0;j<9;j++,index+=1)
+			printf("%12d", *(index));
+			putchar(10);
+		for(j=9;j<19;j++,index+=1)
+			printf("%12d", *(index));
+			putchar(10);
+		for(j=19;j<25;j++,index+=1)
+			printf("%12d", *(index));
 	printf("\n--------------------------------------------------------------------------------------------\n");
 	}
 	
@@ -219,8 +225,11 @@ int main()
 
 	//write inodes to new file
 	fseek(fout, 1024, 0);
-	bytes =  fwrite(inode, sizeof(IND), 20, fout);
-
+	for(i=0;i<20;i++)
+	{
+		bytes =  fwrite(inode[i], sizeof(IND), 1, fout);
+	}
+	
 	//write swap region
 	fseek(fin, spbk->swap_offset, 0);
 	fseek(fout, spbk->swap_offset, 0);
