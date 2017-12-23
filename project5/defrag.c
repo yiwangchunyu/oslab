@@ -59,21 +59,17 @@ int main()
 			putchar(10);
 		for(j=19;j<25;j++,index+=1)
 			printf("%12d", *(index));
-	printf("\n--------------------------------------------------------------------------------------------\n");
+	printf("\n------------------------------------------------------------------------------------------------------------------------------------------\n");
 	}
 	
 	//write data to a new file for each inode;
 	for(i=0;i<20;i++)
 	{
 		//unused inode, just scape;
-		if(inode[i]->nlink!=0) continue;
+		if(inode[i]->nlink==0) continue;
 		//for used inode
 		int end=0;
-		fseek(fin,inode[i]->dblocks[0], 0);
-		bytes = fread(buffer, 512, 1, fin);
-		fseek(fout, 1024 + data_offset*512, 0);
-		fwrite(buffer, 512, 1, fout);
-		inode[i]->dblocks[0] = data_offset++;
+		
 		// for each dblocks
 		for(j=0;j<N_DBLOCKS;j++)
 		{
@@ -82,7 +78,7 @@ int main()
 				end = 1;
 				break;
 			}			
-			fseek(fin, inode[i]->dblocks[j], 0);
+			fseek(fin, 1024 + 512*inode[i]->dblocks[j], 0);
 			bytes = fread(buffer, 512, 1, fin);
 			fseek(fout, 1024 + data_offset*512, 0);
 			fwrite(buffer, 512, 1, fout);
