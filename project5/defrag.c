@@ -18,7 +18,7 @@ int main()
 		printf("不能打开文件in\n");
 		exit(0);
 	}
-	if((fout = fopen(FILEOUT, "ab"))==NULL)
+	if((fout = fopen(FILEOUT, "wb"))==NULL)
 	{
 		printf("不能打开文件out\n");
 		exit(0);
@@ -215,11 +215,11 @@ int main()
 	//write superblock to new file
 	spbk->free_iblock = data_offset;
 	fseek(fout, 512, 0);
-	bytes =  fwrite(spbk, 512, 1, fout);
+	bytes =  fwrite(spbk, sizeof(SBK), 1, fout);
 
 	//write inodes to new file
 	fseek(fout, 1024, 0);
-	bytes =  fwrite(inode, 512, 1, fout);
+	bytes =  fwrite(inode, sizeof(IND), 20, fout);
 
 	//write swap region
 	fseek(fin, spbk->swap_offset, 0);
