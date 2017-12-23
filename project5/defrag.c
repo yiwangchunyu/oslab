@@ -5,7 +5,7 @@ int main()
 	FILE * fin, * fout; 
 	char * buffer; 
 	int * index;
-	int i,j;
+	int i,j,k,l;
 	size_t bytes;
 	//data offset in blocks;
 	int data_offset = 4; 
@@ -56,7 +56,7 @@ int main()
 	printf("\n--------------------------------------------------------------------------------------------\n");
 	}
 	
-	//write data to a new file for each block;
+	//write data to a new file for each inode;
 	for(i=0;i<20;i++)
 	{
 		//unused inode, just scape;
@@ -93,11 +93,10 @@ int main()
 					break;
 				}
 				//copy iblocks
-				fseek(fin, inode[i]->iblocks[j], 0);
-				bytes = fread(buffer, 512, 1, fin);
 				int iblock_p[512/4]={0};
-				memcpy(iblock_p, buffer,512);
-				int k;
+				fseek(fin, 1024+512*inode[i]->iblocks[j], 0);
+				bytes = fread(iblock_p, 512, 1, fin);
+
 				for(k=0;k<512/4;k++)
 				{
 					if(iblock_p[k]==0)
@@ -105,7 +104,7 @@ int main()
 						end = 1;
 						break;
 					}
-					fseek(fin, iblock_p[k], 0);
+					fseek(fin, 1024+512*iblock_p[k], 0);
 					bytes = fread(buffer, 512, 1, fin);
 					fseek(fout, 1024 + data_offset*512, 0);
 					fwrite(buffer, 512, 1, fout);
@@ -119,13 +118,97 @@ int main()
 		//for each i2blocks
 		if(end==0)
 		{
-
+			int i2block_p[512/4]={0};
+			fseek(fin, 1024+512*inode[i]->i2block, 0);
+			bytes = fread(i2block_p, 512, 1, fin);
+			
+			for(j=0;j<512/4;j++)
+			{
+				if(i2block_p[j]==0) 
+				{
+					end = 1;
+					break;
+				}
+				//copy iblocks
+				int iblock_p[512/4]={0};
+				fseek(fin, 1024 + 512*i2block_p[j], 0);
+				bytes = fread(iblock_p, 512, 1, fin);
+				
+				for(k=0;k<512/4;k++)
+				{
+					if(iblock_p[k]==0)
+					{
+						end = 1;
+						break;
+					}
+					fseek(fin, 1024 + 512*iblock_p[k], 0);
+					bytes = fread(buffer, 512, 1, fin);
+					fseek(fout, 1024 + data_offset*512, 0);
+					fwrite(buffer, 512, 1, fout);
+					iblock_p[k] = data_offset++;
+				}
+				fseek(fout, 1024 + data_offset*512, 0);
+				fwrite(iblock_p, 512, 1, fout);
+				i2block_p[j] = data_offset++;
+			}
+			fseek(fout, 1024 + data_offset*512, 0);
+			fwrite(i2block_p, 512, 1, fout);
+			inode[i]->i2block = data_offset++;
 		}
 
 		//for each i3blocks
 		if(end==0)
 		{
-
+			int i3block_p[512/4]={0};
+			fseek(fin, 1024+512*inode[i]->i3block, 0);
+			bytes = fread(i3block_p, 512, 1, fin);
+			for(j=0;j<512/4;j++)
+			{
+				if(i3block_p[j]==0) 
+				{
+					end = 1;
+					break;
+				}
+				int i2block_p[512/4]={0};
+				fseek(fin, 1024+512*i3block_p[j], 0);
+				bytes = fread(i2block_p, 512, 1, fin);
+			
+				for(k=0;k<512/4;k++)
+				{
+					if(i2block_p[k]==0) 
+					{
+						end = 1;
+						break;
+					}
+					//copy iblocks
+					int iblock_p[512/4]={0};
+					fseek(fin, 1024 + 512*i2block_p[j], 0);
+					bytes = fread(iblock_p, 512, 1, fin);
+				
+					for(l=0;l<512/4;l++)
+					{
+						if(iblock_p[l]==0)
+						{
+							end = 1;
+							break;
+						}
+						fseek(fin, 1024 + 512*iblock_p[l], 0);
+						bytes = fread(buffer, 512, 1, fin);
+						fseek(fout, 1024 + data_offset*512, 0);
+						fwrite(buffer, 512, 1, fout);
+						iblock_p[l] = data_offset++;
+					}
+					fseek(fout, 1024 + data_offset*512, 0);
+					fwrite(iblock_p, 512, 1, fout);
+					i2block_p[k] = data_offset++;
+				}
+				fseek(fout, 1024 + data_offset*512, 0);
+				fwrite(i2block_p, 512, 1, fout);
+				i3block_p[j] = data_offset++;
+			}
+			fseek(fout, 1024 + data_offset*512, 0);
+			fwrite(i3block_p, 512, 1, fout);
+			inode[i]->i3block = data_offset++;
 		}		
 	}
 	
@@ -138,7 +221,15 @@ int main()
 	fseek(fout, 1024, 0);
 	bytes =  fwrite(inode, 512, 1, fout);
 
-
+	//write swap region
+	fseek(fin, spbk->swap_offset, 0);
+	fseek(fout, spbk->swap_offset, 0);
+	while((bytes = fread(buffer, 512, 1, fin))==1)
+	{
+		bytes =  fwrite(inode, 512, 1, fout);
+	}
+	
+	
 	fclose(fin);
 	fclose(fout);
 	return 0;
