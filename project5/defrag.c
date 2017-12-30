@@ -13,8 +13,6 @@ int main(int argc, char *argv[])
 	//file in and file out;
 	char *filein = argv[1];
 	char *fileout = newFileName(filein);
-	printf("fileout: %s", fileout);
-	return 0;
 	if((fin = fopen(filein, "r"))==NULL)
 	{
 		printf("不能打开文件%s\n", filein);
@@ -49,6 +47,9 @@ int main(int argc, char *argv[])
 	
 
 	//write data to a new file for each inode;
+	int *iblock_p = (int *)malloc(block_size/4);
+	int *i2block_p=(int *)malloc(block_size/4);
+	int *i3block_p=(int *)malloc(block_size/4);
 	LKIND *p = head;
 	while(p!=NULL)
 	{
@@ -71,18 +72,21 @@ int main(int argc, char *argv[])
 			fwrite(buffer, block_size, 1, fout);
 			inode->dblocks[j] = data_offset++;
 		}
+
+		
 		//for each iblocks;
 		if(end==0)
 		{
 			for(j=0;j<N_IBLOCKS;j++)
 			{
+				
 				if(inode->iblocks[j]==0) 
 				{
 					end = 1;
 					break;
 				}
 				//copy iblocks
-				int *iblock_p = (int *)malloc(block_size/4);
+				
 				fseek(fin, 1024+block_size*inode->iblocks[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
 
@@ -102,7 +106,6 @@ int main(int argc, char *argv[])
 				fseek(fout, 1024 + data_offset*block_size, 0);
 				fwrite(iblock_p, block_size, 1, fout);
 				inode->iblocks[j] = data_offset++;
-				free(iblock_p);
 			}	
 		}
 		//for each i2blocks
@@ -113,7 +116,6 @@ int main(int argc, char *argv[])
 				end=1;
 				break;
 			}
-			int *i2block_p=(int *)malloc(block_size/4);
 			fseek(fin, 1024+block_size*inode->i2block, 0);
 			bytes = fread(i2block_p, block_size, 1, fin);
 			
@@ -125,7 +127,6 @@ int main(int argc, char *argv[])
 					break;
 				}
 				//copy iblocks
-				int *iblock_p = (int *)malloc(block_size/4);
 				fseek(fin, 1024 + block_size*i2block_p[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
 				
@@ -145,12 +146,12 @@ int main(int argc, char *argv[])
 				fseek(fout, 1024 + data_offset*block_size, 0);
 				fwrite(iblock_p, block_size, 1, fout);
 				i2block_p[j] = data_offset++;
-				free(iblock_p);
+
 			}
 			fseek(fout, 1024 + data_offset*512, 0);
 			fwrite(i2block_p, block_size, 1, fout);
 			inode->i2block = data_offset++;
-			free(i2block_p);
+
 		}
 		//for each i3blocks
 		if(end==0)
@@ -160,7 +161,7 @@ int main(int argc, char *argv[])
 				end=1;
 				break;
 			}
-			int *i3block_p=(int *)malloc(block_size/4);
+			
 			fseek(fin, 1024+block_size*inode->i3block, 0);
 			bytes = fread(i3block_p, block_size, 1, fin);
 			for(j=0;j<block_size/4;j++)
@@ -170,7 +171,7 @@ int main(int argc, char *argv[])
 					end = 1;
 					break;
 				}
-				int *i2block_p=(int *)malloc(block_size/4);
+			
 				fseek(fin, 1024+block_size*i3block_p[j], 0);
 				bytes = fread(i2block_p, block_size, 1, fin);
 			
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
 						break;
 					}
 					//copy iblocks
-					int *iblock_p=(int *)malloc(block_size/4);
+					
 					fseek(fin, 1024 + block_size*i2block_p[j], 0);
 					bytes = fread(iblock_p, block_size, 1, fin);
 				
@@ -202,17 +203,17 @@ int main(int argc, char *argv[])
 					fseek(fout, 1024 + data_offset*block_size, 0);
 					fwrite(iblock_p, block_size, 1, fout);
 					i2block_p[k] = data_offset++;
-					free(iblock_p);
+					
 				}
 				fseek(fout, 1024 + data_offset*block_size, 0);
 				fwrite(i2block_p, block_size, 1, fout);
 				i3block_p[j] = data_offset++;
-				free(i2block_p);
+				
 			}
 			fseek(fout, 1024 + data_offset*block_size, 0);
 			fwrite(i3block_p, block_size, 1, fout);
 			inode->i3block = data_offset++;
-			free(i3block_p);
+			
 		}		
 		p=p->next;
 	}
@@ -229,6 +230,7 @@ int main(int argc, char *argv[])
 	while(p!=NULL)
 	{
 		bytes =  fwrite(p->inode, sizeof(IND), 1, fout);
+		p=p->next;
 	}
 	
 	//write swap region
@@ -240,6 +242,9 @@ int main(int argc, char *argv[])
 		bytes =  fwrite(buffer, block_size, 1, fout);
 	}
 	
+	//free(iblock_p);
+	//free(i2block_p);
+	//free(i3block_p);
 	mem_free(head, spbk, fileout, buffer);
 	fclose(fin);
 	fclose(fout);
@@ -273,12 +278,12 @@ void bootCopy(FILE* fin, FILE* fout)
 
 void superblock_build(FILE* fin,FILE* fout, SBK *spbk)
 {
-	char * buffer = (char *)malloc(512);
+	char * bf = (char *)malloc(512);
 	fseek(fin, 512, 0);
-	bytes = fread(buffer, 512, 1, fin);
-	bytes = fwrite(buffer, 512, 1, fout);//预写入，后面会修改spbk部分
-	memcpy(spbk, buffer, 6*4);
-	free(buffer);
+	bytes = fread(bf, 512, 1, fin);
+	bytes = fwrite(bf, 512, 1, fout);//预写入，后面会修改spbk部分
+	memcpy(spbk, bf, 6*4);
+	free(bf);
 }
 
 /*
