@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #define N_DBLOCKS 10 
 #define N_IBLOCKS 4 
-#define FILEOUT "datafile-frag-defrag"
-#define FILEIN "datafile-frag"
 
 typedef struct superblock { 
     int size; /* size of blocks in bytes */ 
@@ -29,3 +27,33 @@ typedef struct inode {
     int i2block; /* pointer to doubly indirect block */ 
     int i3block; /* pointer to triply indirect block */ 
 }IND;
+
+typedef struct linked_inode{
+	IND *inode;
+	struct linked_inode *next;
+}LKIND;
+
+char * newFileName(char * filein);
+
+void bootCopy(FILE* fin, FILE* fout);
+
+void superblock_build(FILE* fin, FILE* fout , SBK *spbk);
+/*
+* 新结点入链表，注意一定要加在结尾，方便检查，
+* 初始值head=NULL
+*/
+void newInode(LKIND** head, IND * inode); 
+
+
+/**
+* 建立inode链表
+*
+*/
+void buildLKIND(LKIND** head, int numOfInode, FILE *fin, char * buffer); 
+
+
+void mem_free(LKIND* head, SBK *spbk, char* fout, char * buffer);
+
+void print_inodes(LKIND* head);
+
+void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk , char * buffer);
