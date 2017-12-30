@@ -1,15 +1,16 @@
 #include "defrag.h"
 #include<string.h>
 int block_size;
+SBK *spbk;
 size_t bytes;
 int main(int argc, char *argv[])
 {
-	FILE * fin, * fout; 
-	char * buffer; 
-	int j,k,l;
-	SBK *spbk =  (SBK * )malloc(sizeof(SBK));
+	FILE * fin, * fout;
+	char * buffer;
+	int i,j,k,l;
+	spbk =  (SBK * )malloc(sizeof(SBK));
 	LKIND *head = NULL;
-	
+
 	//file in and file out;
 	char *filein = argv[1];
 	char *fileout = newFileName(filein);
@@ -23,45 +24,51 @@ int main(int argc, char *argv[])
 		printf("不能打开文件%s\n", fileout);
 		exit(0);
 	}
-	
+
 	//boot
 	bootCopy(fin, fout);
-	
-	
+
+
 	//superblock build
 	superblock_build(fin, fout, spbk);
 
 	//data offset in blocks;
-	int data_offset = spbk->data_offset; 
+	int data_offset = spbk->data_offset;
 	int block_size = spbk->size;
 	buffer = (char *)malloc(block_size);
-	
+
 	printf("\n--------------------------------------\n");
 
 	//inodes build
 	int numOfInode = block_size*spbk->data_offset/100;
 	buildLKIND(&head, numOfInode, fin, buffer);
-	
+
 	//area Copy Inode To Data
 	areaCopyInodeToData(fin, fout, spbk,buffer );
-	
+
 
 	//write data to a new file for each inode;
 	int *iblock_p = (int *)malloc(block_size/4);
 	int *i2block_p=(int *)malloc(block_size/4);
 	int *i3block_p=(int *)malloc(block_size/4);
 	LKIND *p = head;
+	i=0;
 	while(p!=NULL)
 	{
 		IND * inode = p->inode;
 		//unused inode, just scape;
-		if(inode->nlink==0) continue;
+		if(inode->nlink==0)
+		{
+            p=p->next;
+            i++;
+            continue;
+		}
 		//for used inode
-		int end=0;		
+		int end=0;
 		// for each dblocks
 		for(j=0;j<N_DBLOCKS;j++)
 		{
-			if(inode->dblocks[j]==0) 
+			if(inode->dblocks[j]==0)
 			{
 				end = 1;
 				break;
@@ -73,20 +80,20 @@ int main(int argc, char *argv[])
 			inode->dblocks[j] = data_offset++;
 		}
 
-		
+
 		//for each iblocks;
 		if(end==0)
 		{
 			for(j=0;j<N_IBLOCKS;j++)
 			{
-				
-				if(inode->iblocks[j]==0) 
+
+				if(inode->iblocks[j]==0)
 				{
 					end = 1;
 					break;
 				}
 				//copy iblocks
-				
+
 				fseek(fin, 1024+block_size*inode->iblocks[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
 
@@ -106,7 +113,7 @@ int main(int argc, char *argv[])
 				fseek(fout, 1024 + data_offset*block_size, 0);
 				fwrite(iblock_p, block_size, 1, fout);
 				inode->iblocks[j] = data_offset++;
-			}	
+			}
 		}
 		//for each i2blocks
 		if(end==0)
@@ -114,14 +121,16 @@ int main(int argc, char *argv[])
 			if(inode->i2block==0)
 			{
 				end=1;
-				break;
+				p=p->next;
+                i++;
+				continue;
 			}
 			fseek(fin, 1024+block_size*inode->i2block, 0);
 			bytes = fread(i2block_p, block_size, 1, fin);
-			
+
 			for(j=0;j<block_size/4;j++)
 			{
-				if(i2block_p[j]==0) 
+				if(i2block_p[j]==0)
 				{
 					end = 1;
 					break;
@@ -129,7 +138,7 @@ int main(int argc, char *argv[])
 				//copy iblocks
 				fseek(fin, 1024 + block_size*i2block_p[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
-				
+
 				for(k=0;k<block_size/4;k++)
 				{
 					if(iblock_p[k]==0)
@@ -159,34 +168,36 @@ int main(int argc, char *argv[])
 			if(inode->i3block==0)
 			{
 				end=1;
-				break;
+				p=p->next;
+                i++;
+				continue;
 			}
-			
+
 			fseek(fin, 1024+block_size*inode->i3block, 0);
 			bytes = fread(i3block_p, block_size, 1, fin);
 			for(j=0;j<block_size/4;j++)
 			{
-				if(i3block_p[j]==0) 
+				if(i3block_p[j]==0)
 				{
 					end = 1;
 					break;
 				}
-			
+
 				fseek(fin, 1024+block_size*i3block_p[j], 0);
 				bytes = fread(i2block_p, block_size, 1, fin);
-			
+
 				for(k=0;k<block_size/4;k++)
 				{
-					if(i2block_p[k]==0) 
+					if(i2block_p[k]==0)
 					{
 						end = 1;
 						break;
 					}
 					//copy iblocks
-					
+
 					fseek(fin, 1024 + block_size*i2block_p[j], 0);
 					bytes = fread(iblock_p, block_size, 1, fin);
-				
+
 					for(l=0;l<block_size/4;l++)
 					{
 						if(iblock_p[l]==0)
@@ -203,45 +214,69 @@ int main(int argc, char *argv[])
 					fseek(fout, 1024 + data_offset*block_size, 0);
 					fwrite(iblock_p, block_size, 1, fout);
 					i2block_p[k] = data_offset++;
-					
+
 				}
 				fseek(fout, 1024 + data_offset*block_size, 0);
 				fwrite(i2block_p, block_size, 1, fout);
 				i3block_p[j] = data_offset++;
-				
+
 			}
 			fseek(fout, 1024 + data_offset*block_size, 0);
 			fwrite(i3block_p, block_size, 1, fout);
 			inode->i3block = data_offset++;
-			
-		}		
+
+		}
 		p=p->next;
+		i++;
 	}
-	
-	
+
+
 	//write superblock to new file
 	spbk->free_iblock = data_offset;
 	fseek(fout, 512, 0);
 	bytes =  fwrite(spbk, sizeof(SBK), 1, fout);
 
 	//write inodes to new file
-	fseek(fout, 1024+block_size*spbk->inode_offset, 0);
+	//fseek(fout, 1024+block_size*spbk->inode_offset, 0);
 	p=head;
+	i=0;
 	while(p!=NULL)
 	{
+		fseek(fout, 1024 + (spbk->inode_offset)*block_size+(i++)*sizeof(IND), 0);
 		bytes =  fwrite(p->inode, sizeof(IND), 1, fout);
 		p=p->next;
 	}
-	
+
+    //write free blocks
+    fseek(fout, 1024+block_size*data_offset, 0);
+    for(;data_offset<spbk->swap_offset-1;data_offset++)
+    {
+        int *next_free_block = (int *)buffer;
+        *next_free_block = data_offset+1;
+        bytes = fwrite(buffer, block_size, 1, fout);
+    }
+
+
+    //write the last free blocks
+    int *next_free_block = (int *)buffer;
+    *next_free_block = -1;
+    bytes = fwrite(buffer, block_size, 1, fout);
+    data_offset++;
+    printf("%d \n", data_offset);
+
 	//write swap region
 	fseek(fin, 1024+block_size*spbk->swap_offset, 0);
-	fseek(fout, 1024+block_size*spbk->swap_offset, 0);
+	//fseek(fout, 1024+block_size*spbk->swap_offset, 0);
+	i=0;
 	while(!feof(fin))
 	{
+		fseek(fin, 1024+block_size*spbk->swap_offset+i*block_size, 0);
+		fseek(fout, 1024+block_size*spbk->swap_offset+(i++)*block_size, 0);
 		bytes = fread(buffer, block_size, 1, fin);
-		bytes =  fwrite(buffer, block_size, 1, fout);
+		//printf("%d ",bytes);
+		bytes = fwrite(buffer, bytes, 1, fout);
 	}
-	
+
 	//free(iblock_p);
 	//free(i2block_p);
 	//free(i3block_p);
@@ -316,10 +351,10 @@ void buildLKIND(LKIND** head, int numOfInode, FILE *fin, char * buffer)//建立i
 	for(i=0;i<numOfInode;i++)
 	{
 		tempi = (IND *)malloc(sizeof(IND));
-		fseek(fin, 1024 + i*block_size, 0);
-		bytes = fread(buffer, 25*4, 1, fin);
-		memcpy(tempi, buffer, 100);
-		newInode(head, tempi); 
+		fseek(fin, 1024+(spbk->inode_offset)*block_size+i*sizeof(IND), 0);
+		bytes = fread(buffer, sizeof(IND), 1, fin);
+		memcpy(tempi, buffer, sizeof(IND));
+		newInode(head, tempi);
 	}
 }
 
@@ -336,6 +371,6 @@ void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk, char * buffer )
 
 void mem_free(LKIND* head, SBK *spbk, char* fileout, char* buffer)
 {
-	
+
 }
 
