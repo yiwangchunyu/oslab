@@ -42,6 +42,6 @@ void superblock_build(FILE* fin, FILE* fout , SBK *spbk);
 
 void buildIND(IND** inode, int numOfInode, FILE *fin, char * buffer); 
 
-
+void error_checking(int stat);
 
 void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk , char * buffer);

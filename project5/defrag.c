@@ -27,17 +27,19 @@ int main(int argc, char *argv[])
 
 	//boot
 	bootCopy(fin, fout);
-
+	
+		
 
 	//superblock build
 	superblock_build(fin, fout, spbk);
 
+	
 	//data offset in blocks;
 	int data_offset = spbk->data_offset;
 	int block_size = spbk->size;
 	buffer = (char *)malloc(block_size);
 
-	printf("\n--------------------------------------\n");
+	//printf("\n--------------------------------------\n");
 
 	//inodes build
 	int numOfInode = block_size*spbk->data_offset/100;
@@ -45,9 +47,19 @@ int main(int argc, char *argv[])
 	for(i=0;i<numOfInode;i++)
 		inode[i] = (IND*)malloc(sizeof(IND));
 	buildIND(inode, numOfInode, fin, buffer);
+	
+	//write inodes to new file; 预写入，后面会重写的
+	//fseek(fout, 1024+block_size*spbk->inode_offset, 0);
 
+	for(i=0;i<numOfInode;i++)
+	{
+		fseek(fout, 1024 + (spbk->inode_offset)*block_size+i*sizeof(IND), 0);
+		bytes =  fwrite(inode[i], sizeof(IND), 1, fout);
+		error_checking(bytes);
+	}
+	
 	//area Copy Inode To Data
-	areaCopyInodeToData(fin, fout, spbk,buffer );
+	areaCopyInodeToData(fin, fout, spbk, buffer );
 
 
 	//write data to a new file for each inode;
@@ -75,8 +87,10 @@ int main(int argc, char *argv[])
 			}
 			fseek(fin, 1024 + block_size*inode[i]->dblocks[j], 0);
 			bytes = fread(buffer, block_size, 1, fin);
+			error_checking(bytes);
 			fseek(fout, 1024 + data_offset*block_size, 0);
-			fwrite(buffer, block_size, 1, fout);
+			bytes = fwrite(buffer, block_size, 1, fout);
+			error_checking(bytes);
 			inode[i]->dblocks[j] = data_offset++;
 		}
 
@@ -96,7 +110,7 @@ int main(int argc, char *argv[])
 
 				fseek(fin, 1024+block_size*inode[i]->iblocks[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
-
+				error_checking(bytes);
 				for(k=0;k<block_size/4;k++)
 				{
 					if(iblock_p[k]==0)
@@ -106,12 +120,15 @@ int main(int argc, char *argv[])
 					}
 					fseek(fin, 1024+block_size*iblock_p[k], 0);
 					bytes = fread(buffer, block_size, 1, fin);
+					error_checking(bytes);
 					fseek(fout, 1024 + data_offset*block_size, 0);
-					fwrite(buffer, block_size, 1, fout);
+					bytes = fwrite(buffer, block_size, 1, fout);
+					error_checking(bytes);
 					iblock_p[k] = data_offset++;
 				}
 				fseek(fout, 1024 + data_offset*block_size, 0);
-				fwrite(iblock_p, block_size, 1, fout);
+				bytes = fwrite(iblock_p, block_size, 1, fout);
+				error_checking(bytes);
 				inode[i]->iblocks[j] = data_offset++;
 			}
 		}
@@ -125,7 +142,8 @@ int main(int argc, char *argv[])
 			}
 			fseek(fin, 1024+block_size*inode[i]->i2block, 0);
 			bytes = fread(i2block_p, block_size, 1, fin);
-
+			error_checking(bytes);
+			
 			for(j=0;j<block_size/4;j++)
 			{
 				if(i2block_p[j]==0)
@@ -136,6 +154,7 @@ int main(int argc, char *argv[])
 				//copy iblocks
 				fseek(fin, 1024 + block_size*i2block_p[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
+				error_checking(bytes);
 
 				for(k=0;k<block_size/4;k++)
 				{
@@ -146,17 +165,21 @@ int main(int argc, char *argv[])
 					}
 					fseek(fin, 1024 + block_size*iblock_p[k], 0);
 					bytes = fread(buffer, block_size, 1, fin);
+					error_checking(bytes);
 					fseek(fout, 1024 + data_offset*block_size, 0);
-					fwrite(buffer, block_size, 1, fout);
+					bytes = fwrite(buffer, block_size, 1, fout);
+					error_checking(bytes);
 					iblock_p[k] = data_offset++;
 				}
 				fseek(fout, 1024 + data_offset*block_size, 0);
-				fwrite(iblock_p, block_size, 1, fout);
+				bytes = fwrite(iblock_p, block_size, 1, fout);
+				error_checking(bytes);
 				i2block_p[j] = data_offset++;
 
 			}
 			fseek(fout, 1024 + data_offset*512, 0);
-			fwrite(i2block_p, block_size, 1, fout);
+			bytes = fwrite(i2block_p, block_size, 1, fout);
+			error_checking(bytes);
 			inode[i]->i2block = data_offset++;
 
 		}
@@ -171,6 +194,7 @@ int main(int argc, char *argv[])
 
 			fseek(fin, 1024+block_size*inode[i]->i3block, 0);
 			bytes = fread(i3block_p, block_size, 1, fin);
+			error_checking(bytes);
 			for(j=0;j<block_size/4;j++)
 			{
 				if(i3block_p[j]==0)
@@ -181,6 +205,7 @@ int main(int argc, char *argv[])
 
 				fseek(fin, 1024+block_size*i3block_p[j], 0);
 				bytes = fread(i2block_p, block_size, 1, fin);
+				error_checking(bytes);
 
 				for(k=0;k<block_size/4;k++)
 				{
@@ -193,6 +218,7 @@ int main(int argc, char *argv[])
 
 					fseek(fin, 1024 + block_size*i2block_p[j], 0);
 					bytes = fread(iblock_p, block_size, 1, fin);
+					error_checking(bytes);
 
 					for(l=0;l<block_size/4;l++)
 					{
@@ -203,41 +229,47 @@ int main(int argc, char *argv[])
 						}
 						fseek(fin, 1024 + block_size*iblock_p[l], 0);
 						bytes = fread(buffer, block_size, 1, fin);
+						error_checking(bytes);
 						fseek(fout, 1024 + data_offset*block_size, 0);
-						fwrite(buffer, block_size, 1, fout);
+						bytes = fwrite(buffer, block_size, 1, fout);
+						error_checking(bytes);
 						iblock_p[l] = data_offset++;
 					}
 					fseek(fout, 1024 + data_offset*block_size, 0);
-					fwrite(iblock_p, block_size, 1, fout);
+					bytes = fwrite(iblock_p, block_size, 1, fout);
+					error_checking(bytes);
 					i2block_p[k] = data_offset++;
 
 				}
 				fseek(fout, 1024 + data_offset*block_size, 0);
-				fwrite(i2block_p, block_size, 1, fout);
+				bytes = fwrite(i2block_p, block_size, 1, fout);
+				error_checking(bytes);
 				i3block_p[j] = data_offset++;
 
 			}
 			fseek(fout, 1024 + data_offset*block_size, 0);
-			fwrite(i3block_p, block_size, 1, fout);
+			bytes = fwrite(i3block_p, block_size, 1, fout);
+			error_checking(bytes);
 			inode[i]->i3block = data_offset++;
 
 		}
 	}
 
 
-	//write superblock to new file
+	//rewrite superblock to new file
 	spbk->free_iblock = data_offset;
 	fseek(fout, 512, 0);
 	bytes =  fwrite(spbk, sizeof(SBK), 1, fout);
-
-	//write inodes to new file
+	error_checking(bytes);
+	
+	//rewrite inodes to new file
 	//fseek(fout, 1024+block_size*spbk->inode_offset, 0);
 
 	for(i=0;i<numOfInode;i++)
 	{
 		fseek(fout, 1024 + (spbk->inode_offset)*block_size+i*sizeof(IND), 0);
 		bytes =  fwrite(inode[i], sizeof(IND), 1, fout);
-
+		error_checking(bytes);
 	}
 
     //write free blocks
@@ -247,6 +279,7 @@ int main(int argc, char *argv[])
         int *next_free_block = (int *)buffer;
         *next_free_block = data_offset+1;
         bytes = fwrite(buffer, block_size, 1, fout);
+		error_checking(bytes);
     }
 
 
@@ -254,8 +287,9 @@ int main(int argc, char *argv[])
     int *next_free_block = (int *)buffer;
     *next_free_block = -1;
     bytes = fwrite(buffer, block_size, 1, fout);
+	error_checking(bytes);
     data_offset++;
-    printf("%d \n", data_offset);
+    //printf("%d \n", data_offset);
 
 	//write swap region
 	fseek(fin, 1024+block_size*spbk->swap_offset, 0);
@@ -268,6 +302,7 @@ int main(int argc, char *argv[])
 		bytes = fread(buffer, block_size, 1, fin);
 		if(bytes==1)
 			bytes = fwrite(buffer, block_size, 1, fout);
+			error_checking(bytes);
 	}
 
 		free(iblock_p);
@@ -304,8 +339,10 @@ void bootCopy(FILE* fin, FILE* fout)
 	char * buffer = (char *)malloc(512);
 	fseek(fin, 0, 0);
 	bytes = fread(buffer, 512, 1, fin);
+	error_checking(bytes);
 	fseek(fout, 0, 0);
 	bytes = fwrite(buffer, 512, 1, fout);
+	error_checking(bytes);
 	free(buffer);
 }
 
@@ -314,7 +351,9 @@ void superblock_build(FILE* fin,FILE* fout, SBK *spbk)
 	char * bf = (char *)malloc(512);
 	fseek(fin, 512, 0);
 	bytes = fread(bf, 512, 1, fin);
+	error_checking(bytes);
 	bytes = fwrite(bf, 512, 1, fout);//预写入，后面会修改spbk部分
+	error_checking(bytes);
 	memcpy(spbk, bf, 6*4);
 	free(bf);
 }
@@ -328,6 +367,7 @@ void buildIND(IND** inode, int numOfInode, FILE *fin, char * buffer)//建立inod
 	{
 		fseek(fin, 1024+(spbk->inode_offset)*block_size+i*sizeof(IND), 0);
 		bytes = fread(buffer, sizeof(IND), 1, fin);
+		error_checking(bytes);
 		memcpy(inode[i], buffer, sizeof(IND));
 	}
 }
@@ -339,8 +379,18 @@ void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk, char * buffer )
 	int amount = block_size*spbk->data_offset%100;
 	fseek(fin, start, 0);
 	bytes = fread(buffer, amount, 1, fin);
+	error_checking(bytes);
 	fseek(fout, start, 0);
 	bytes = fwrite(buffer, amount, 1, fout);
+	error_checking(bytes);
 }
 
+void error_checking(int stat)
+{
+	if(stat!=1) 
+	{
+		printf("文件读写失败,%d\n", stat);
+	}	
+
+}
 
