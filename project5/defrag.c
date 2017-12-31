@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
 
 
 	//write data to a new file for each inode;
-	int *iblock_p = (int *)malloc(block_size/4);
-	int *i2block_p=(int *)malloc(block_size/4);
-	int *i3block_p=(int *)malloc(block_size/4);
+	int *iblock_p = (int *)malloc(block_size);
+	int *i2block_p=(int *)malloc(block_size);
+	int *i3block_p=(int *)malloc(block_size);
 
 	for(i=0;i<numOfInode;i++)
 	{
@@ -266,13 +266,13 @@ int main(int argc, char *argv[])
 		fseek(fin, 1024+block_size*spbk->swap_offset+i*block_size, 0);
 		fseek(fout, 1024+block_size*spbk->swap_offset+(i++)*block_size, 0);
 		bytes = fread(buffer, block_size, 1, fin);
-		//printf("%d ",bytes);
-		bytes = fwrite(buffer, bytes, 1, fout);
+		if(bytes==1)
+			bytes = fwrite(buffer, block_size, 1, fout);
 	}
 
-	//free(iblock_p);
-	//free(i2block_p);
-	//free(i3block_p);
+		free(iblock_p);
+		free(i2block_p);
+		free(i3block_p);
 	free(spbk);
 	free(fileout);
 	free(buffer);
