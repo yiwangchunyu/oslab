@@ -1,6 +1,7 @@
 #include "defrag.h"
 #include<string.h>
 int block_size;
+int data_offset;
 SBK *spbk;
 size_t bytes;
 int main(int argc, char *argv[])
@@ -27,16 +28,16 @@ int main(int argc, char *argv[])
 
 	//boot
 	bootCopy(fin, fout);
-	
-		
+
+
 
 	//superblock build
 	superblock_build(fin, fout, spbk);
 
-	
+
 	//data offset in blocks;
-	int data_offset = spbk->data_offset;
-	int block_size = spbk->size;
+	data_offset = spbk->data_offset;
+	block_size = spbk->size;
 	buffer = (char *)malloc(block_size);
 
 	//printf("\n--------------------------------------\n");
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 	for(i=0;i<numOfInode;i++)
 		inode[i] = (IND*)malloc(sizeof(IND));
 	buildIND(inode, numOfInode, fin, buffer);
-	
+
 	//write inodes to new file; 预写入，后面会重写的
 	//fseek(fout, 1024+block_size*spbk->inode_offset, 0);
 
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
 		bytes =  fwrite(inode[i], sizeof(IND), 1, fout);
 		error_checking(bytes);
 	}
-	
+
 	//area Copy Inode To Data
 	areaCopyInodeToData(fin, fout, spbk, buffer );
 
@@ -69,7 +70,7 @@ int main(int argc, char *argv[])
 
 	for(i=0;i<numOfInode;i++)
 	{
-		
+
 		//unused inode, just scape;
 		if(inode[i]->nlink==0)
 		{
@@ -143,7 +144,7 @@ int main(int argc, char *argv[])
 			fseek(fin, 1024+block_size*inode[i]->i2block, 0);
 			bytes = fread(i2block_p, block_size, 1, fin);
 			error_checking(bytes);
-			
+
 			for(j=0;j<block_size/4;j++)
 			{
 				if(i2block_p[j]==0)
@@ -261,7 +262,7 @@ int main(int argc, char *argv[])
 	fseek(fout, 512, 0);
 	bytes =  fwrite(spbk, sizeof(SBK), 1, fout);
 	error_checking(bytes);
-	
+
 	//rewrite inodes to new file
 	//fseek(fout, 1024+block_size*spbk->inode_offset, 0);
 
@@ -387,10 +388,10 @@ void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk, char * buffer )
 
 void error_checking(int stat)
 {
-	if(stat!=1) 
+	if(stat!=1)
 	{
-		printf("文件读写失败,%d\n", stat);
-	}	
+		//printf("文件读写失败,%d\n", stat);
+	}
 
 }
 

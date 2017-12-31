@@ -28,10 +28,6 @@ typedef struct inode {
     int i3block; /* pointer to triply indirect block */ 
 }IND;
 
-typedef struct linked_inode{
-	IND *inode;
-	struct linked_inode *next;
-}LKIND;
 
 char * newFileName(char * filein);
 
