@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	char * buffer;
 	int i,j,k,l;
 	spbk =  (SBK * )malloc(sizeof(SBK));
-	LKIND *head = NULL;
+
 
 	//file in and file out;
 	char *filein = argv[1];
@@ -41,7 +41,10 @@ int main(int argc, char *argv[])
 
 	//inodes build
 	int numOfInode = block_size*spbk->data_offset/100;
-	buildLKIND(&head, numOfInode, fin, buffer);
+	IND **inode = (IND**)malloc(numOfInode*sizeof(IND*));
+	for(i=0;i<numOfInode;i++)
+		inode[i] = (IND*)malloc(sizeof(IND));
+	buildIND(inode, numOfInode, fin, buffer);
 
 	//area Copy Inode To Data
 	areaCopyInodeToData(fin, fout, spbk,buffer );
@@ -51,16 +54,13 @@ int main(int argc, char *argv[])
 	int *iblock_p = (int *)malloc(block_size/4);
 	int *i2block_p=(int *)malloc(block_size/4);
 	int *i3block_p=(int *)malloc(block_size/4);
-	LKIND *p = head;
-	i=0;
-	while(p!=NULL)
+
+	for(i=0;i<numOfInode;i++)
 	{
-		IND * inode = p->inode;
+		
 		//unused inode, just scape;
-		if(inode->nlink==0)
+		if(inode[i]->nlink==0)
 		{
-            p=p->next;
-            i++;
             continue;
 		}
 		//for used inode
@@ -68,16 +68,16 @@ int main(int argc, char *argv[])
 		// for each dblocks
 		for(j=0;j<N_DBLOCKS;j++)
 		{
-			if(inode->dblocks[j]==0)
+			if(inode[i]->dblocks[j]==0)
 			{
 				end = 1;
 				break;
 			}
-			fseek(fin, 1024 + block_size*inode->dblocks[j], 0);
+			fseek(fin, 1024 + block_size*inode[i]->dblocks[j], 0);
 			bytes = fread(buffer, block_size, 1, fin);
 			fseek(fout, 1024 + data_offset*block_size, 0);
 			fwrite(buffer, block_size, 1, fout);
-			inode->dblocks[j] = data_offset++;
+			inode[i]->dblocks[j] = data_offset++;
 		}
 
 
@@ -87,14 +87,14 @@ int main(int argc, char *argv[])
 			for(j=0;j<N_IBLOCKS;j++)
 			{
 
-				if(inode->iblocks[j]==0)
+				if(inode[i]->iblocks[j]==0)
 				{
 					end = 1;
 					break;
 				}
 				//copy iblocks
 
-				fseek(fin, 1024+block_size*inode->iblocks[j], 0);
+				fseek(fin, 1024+block_size*inode[i]->iblocks[j], 0);
 				bytes = fread(iblock_p, block_size, 1, fin);
 
 				for(k=0;k<block_size/4;k++)
@@ -112,20 +112,18 @@ int main(int argc, char *argv[])
 				}
 				fseek(fout, 1024 + data_offset*block_size, 0);
 				fwrite(iblock_p, block_size, 1, fout);
-				inode->iblocks[j] = data_offset++;
+				inode[i]->iblocks[j] = data_offset++;
 			}
 		}
 		//for each i2blocks
 		if(end==0)
 		{
-			if(inode->i2block==0)
+			if(inode[i]->i2block==0)
 			{
 				end=1;
-				p=p->next;
-                i++;
 				continue;
 			}
-			fseek(fin, 1024+block_size*inode->i2block, 0);
+			fseek(fin, 1024+block_size*inode[i]->i2block, 0);
 			bytes = fread(i2block_p, block_size, 1, fin);
 
 			for(j=0;j<block_size/4;j++)
@@ -159,21 +157,19 @@ int main(int argc, char *argv[])
 			}
 			fseek(fout, 1024 + data_offset*512, 0);
 			fwrite(i2block_p, block_size, 1, fout);
-			inode->i2block = data_offset++;
+			inode[i]->i2block = data_offset++;
 
 		}
 		//for each i3blocks
 		if(end==0)
 		{
-			if(inode->i3block==0)
+			if(inode[i]->i3block==0)
 			{
 				end=1;
-				p=p->next;
-                i++;
 				continue;
 			}
 
-			fseek(fin, 1024+block_size*inode->i3block, 0);
+			fseek(fin, 1024+block_size*inode[i]->i3block, 0);
 			bytes = fread(i3block_p, block_size, 1, fin);
 			for(j=0;j<block_size/4;j++)
 			{
@@ -223,11 +219,9 @@ int main(int argc, char *argv[])
 			}
 			fseek(fout, 1024 + data_offset*block_size, 0);
 			fwrite(i3block_p, block_size, 1, fout);
-			inode->i3block = data_offset++;
+			inode[i]->i3block = data_offset++;
 
 		}
-		p=p->next;
-		i++;
 	}
 
 
@@ -238,13 +232,12 @@ int main(int argc, char *argv[])
 
 	//write inodes to new file
 	//fseek(fout, 1024+block_size*spbk->inode_offset, 0);
-	p=head;
-	i=0;
-	while(p!=NULL)
+
+	for(i=0;i<numOfInode;i++)
 	{
-		fseek(fout, 1024 + (spbk->inode_offset)*block_size+(i++)*sizeof(IND), 0);
-		bytes =  fwrite(p->inode, sizeof(IND), 1, fout);
-		p=p->next;
+		fseek(fout, 1024 + (spbk->inode_offset)*block_size+i*sizeof(IND), 0);
+		bytes =  fwrite(inode[i], sizeof(IND), 1, fout);
+
 	}
 
     //write free blocks
@@ -280,7 +273,12 @@ int main(int argc, char *argv[])
 	//free(iblock_p);
 	//free(i2block_p);
 	//free(i3block_p);
-	mem_free(head, spbk, fileout, buffer);
+	free(spbk);
+	free(fileout);
+	free(buffer);
+	for(i=0;i<numOfInode;i++)
+		free(inode[i]);
+	free(inode);
 	fclose(fin);
 	fclose(fout);
 	return 0;
@@ -321,40 +319,16 @@ void superblock_build(FILE* fin,FILE* fout, SBK *spbk)
 	free(bf);
 }
 
-/*
-* 新结点入链表，注意一定要加在结尾，方便检查，
-* 初始值head=NULL
-*/
-void newInode(LKIND** head, IND * inode)
-{
-	LKIND * templ = (LKIND *)malloc(sizeof(LKIND));
-	templ->inode = inode;
-	templ->next = NULL;
-	if(*head==NULL)
-	{
-		*head = templ;
-	}
-	else
-	{
-        LKIND* t = *head;
-        while(t->next!=NULL)
-            t = t->next;
-        t->next = templ;
-	}
-}
 
 
-void buildLKIND(LKIND** head, int numOfInode, FILE *fin, char * buffer)//建立inode链表
+void buildIND(IND** inode, int numOfInode, FILE *fin, char * buffer)//建立inode链表
 {
-	IND * tempi;
 	int i;
 	for(i=0;i<numOfInode;i++)
 	{
-		tempi = (IND *)malloc(sizeof(IND));
 		fseek(fin, 1024+(spbk->inode_offset)*block_size+i*sizeof(IND), 0);
 		bytes = fread(buffer, sizeof(IND), 1, fin);
-		memcpy(tempi, buffer, sizeof(IND));
-		newInode(head, tempi);
+		memcpy(inode[i], buffer, sizeof(IND));
 	}
 }
 
@@ -369,8 +343,4 @@ void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk, char * buffer )
 	bytes = fwrite(buffer, amount, 1, fout);
 }
 
-void mem_free(LKIND* head, SBK *spbk, char* fileout, char* buffer)
-{
-
-}
 

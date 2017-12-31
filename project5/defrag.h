@@ -38,22 +38,10 @@ char * newFileName(char * filein);
 void bootCopy(FILE* fin, FILE* fout);
 
 void superblock_build(FILE* fin, FILE* fout , SBK *spbk);
-/*
-* 新结点入链表，注意一定要加在结尾，方便检查，
-* 初始值head=NULL
-*/
-void newInode(LKIND** head, IND * inode); 
 
 
-/**
-* 建立inode链表
-*
-*/
-void buildLKIND(LKIND** head, int numOfInode, FILE *fin, char * buffer); 
+void buildIND(IND** inode, int numOfInode, FILE *fin, char * buffer); 
 
 
-void mem_free(LKIND* head, SBK *spbk, char* fout, char * buffer);
-
-void print_inodes(LKIND* head);
 
 void areaCopyInodeToData(FILE *fin, FILE *fout, SBK *spbk , char * buffer);
