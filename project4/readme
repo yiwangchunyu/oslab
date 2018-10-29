@@ -1,0 +1,11 @@
+
+这是不用动态链接库的测试版本：
+
+
+测试counter 不同锁的性能   test_counter.sh
+
+测试list   不同所的性能  test_list.sh
+		对list不同的操作  请查看test_list.c 的function（），并修改注释
+
+测试hash table   不同所的性能  test_hash.sh
+		对hash table不同的操作  请查看test_hash.c 的function（）， 并修改注释

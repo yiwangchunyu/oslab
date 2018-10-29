@@ -45,16 +45,23 @@ int main()
 
 void *function (void *rank)
 {
-	/*test1 insert 1000000 items
+	//test1 insert 1000000 items
+	/*
 	int i;
 	for(i = 0 ;i<MAX;i++)
-	hash_insert(&aHash,i);*/
+	hash_insert(&aHash,i);
+	*/
+
 	//test2 insert 100000 and then delete them
-        /*int i;	
+    /*
+	int i;	
 	for(i = 0 ;i<MAX;i++)
 	  { hash_insert(&aHash,i);}
 	for(i = 0;i<MAX;i++)
-	{ hash_delete(&aHash,i);}*/
+	{ hash_delete(&aHash,i);}
+	*/
+
+
 	//test 3 insert and delete randomly
 	int sign,i;
 	srand(time(0));

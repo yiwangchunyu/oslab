@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "test_list.h"
-#define MAX 1000000
+#define MAX 10000
 #define THREAD_COUNT 8  //线程数
 struct timeval start;
 struct timeval end;
@@ -22,9 +22,9 @@ int main()
 	int i;
 	pthread_t* thread_handles;
 	int thread_count = 1;
-	for(i=0;i<5;i++)
-	{	
-		printf("------------------------test%d----------------------\n", i );
+	//for(i=0;i<5;i++)
+	//{	
+	//	printf("------------------------test%d----------------------\n", i );
 		for(thread_count=1;thread_count<=20;thread_count++)
 		{	
 			list_init(&aList);
@@ -40,24 +40,29 @@ int main()
 			list_free(&aList);
 		}
 	         	
-	}	
+	//}	
 	return 0;
 }
 
 void *function (void *rank)
 {
-	/*test1 insert 1000000 items
-	int i;
+	//test1 insert 1000000 items
+	/*
+	int i;	
 	for(i = 0 ;i<MAX;i++)
-	list_insert(&aList,i);*/
+	list_insert(&aList,i);
+	*/
 	//test2 insert 100000 and then delete them
-        int i;	
+
+    int i;	
 	for(i = 0 ;i<MAX;i++)
 	  { list_insert(&aList,i);}
 	for(i = 0;i<MAX;i++)
 	{ list_delete(&aList,i);}
 
-	/*test 3 insert and delete randomly
+
+	//test 3 insert and delete randomly
+	/*	
 	int sign,i;
 	srand(time(0));
 	for(i = 0 ;i<MAX;i++)
@@ -66,6 +71,7 @@ void *function (void *rank)
 	  int sign = rand()%2;
 	  if(sign)list_insert(&aList,tmp);
 	  else list_insert(&aList,tmp);
-	}*/
+	}
+	*/
 	return NULL;
 }
